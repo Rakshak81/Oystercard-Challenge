@@ -1,6 +1,7 @@
 require_relative '../lib/oystercard.rb' 
 
 describe Oystercard do
+  let(:station){double(:station, :name => "Oxford")}
   it 'should have an opening balance of 0' do
     expect(subject.balance).to eq Oystercard::DEFAULT_BALANCE
   end
@@ -34,13 +35,23 @@ describe Oystercard do
   end
 
   describe '#touch_in' do
-    # it 'can touch in' do 
-    #   subject.touch_in 
-    #   expect(subject).to be_in_journey 
-    # end
+    it 'can touch in' do 
+      card = Oystercard.new
+      subject.top_up(Oystercard::MINIMUM_FARE)
+      subject.touch_in(station)
+      expect(subject).to be_in_journey 
+    end
 
     it 'Will not touch_in if it is below the minimum balance' do
-      expect { subject.touch_in }.to raise_error "Insufficient funds to touch in, Please top up"
+      expect { subject.touch_in(station) }.to raise_error "Insufficient funds to touch in, Please top up"
+    end
+
+    it 'Store Entry Station' do
+      card = Oystercard.new
+      subject.top_up(Oystercard::MINIMUM_FARE)
+      subject.touch_in(station)
+      expect(subject.entry_station.name).to eq station.name
+
     end
   end
 
@@ -48,8 +59,15 @@ describe Oystercard do
     it 'can touch out' do
       card = Oystercard.new
       subject.top_up(Oystercard::MINIMUM_FARE)
-      subject.touch_in
+      subject.touch_in(station)
       expect { subject.touch_out }.to change{ subject.balance }.by(-Oystercard::MINIMUM_FARE)
+    end
+
+    it 'Should Clear the entry Station' do
+      subject.top_up(Oystercard::MINIMUM_FARE)
+      subject.touch_in(station)
+      subject.touch_out
+      expect(subject.entry_station).to be_nil
     end
   #     subject.touch_in 
   #     subject.touch_out 
